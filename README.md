@@ -9,5 +9,8 @@
     cd IMY220Project
     ```
 
+**Colour Pallete**
+    https://www.colourlovers.com/palette/137885/Grey_Toad
+
 
 
