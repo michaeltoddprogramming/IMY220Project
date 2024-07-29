@@ -9,8 +9,7 @@
 
 **Colour Paletes**
 
-    https://www.colourlovers.com/palette/137885/Grey_Toad
-    https://www.colourlovers.com/palette/154705/Panda_vs_Bamboo
+    https://www.colourlovers.com/palette/785323/Beautiful_Freak
     
 
 
