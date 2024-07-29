@@ -1,4 +1,4 @@
-# 🎵 IMY220 Project | Playlist Sharing Website 🎵
+# 🎵 IMY220 Project | JunK 🎵
 
 ### Installation
 
