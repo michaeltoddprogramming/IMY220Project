@@ -1,21 +1,32 @@
-import path from "path";
+// Michael Todd U23540223
+const path = require("path");
 
-export default {
-    entry: "./frontend/src/index.js",
+module.exports = {
+    entry: path.join(__dirname, "frontend/src/index.js"),
     output: {
-        path: path.resolve("frontend/public"),
-        filename: "bundle.js"
+        path: path.resolve(__dirname, "frontend/public"),
+        filename: "bundle.js",
     },
     mode: "development",
     module: {
         rules: [
-            {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader"
-                }
-            }
-        ]
-    }
+        {
+            test: /\.(js|jsx)$/,
+            exclude: /node_modules/,
+            use: {
+            loader: "babel-loader",
+            },
+        },
+        {
+          test: /\.css$/, 
+          use: ["style-loader", "css-loader"], 
+        },
+        {
+          test: /\.(png|svg|gif)$/i, 
+          use: {
+            loader: "file-loader",
+          },
+        },
+        ],
+    },
 };
