@@ -1,8 +1,8 @@
-const path = require('path');
-const express = require('express');
+import express from 'express';
+import path from 'path';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4200;
 
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
