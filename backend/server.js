@@ -1,11 +1,12 @@
 import express from "express";
 import path from "path";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
+import bcrypt from "bcrypt";
 
-dotenv.config();
+dotenv.config(); 
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -23,12 +24,47 @@ async function startServer() {
     const db = client.db("JunK");
     const usersCollection = db.collection("users");
 
-    app.get("/api/users", async (req, res) => {
+    app.post("/api/register", async (req, res) => {
       try {
-        const users = await usersCollection.find().toArray();
-        res.json(users);
+        const { signupUsername, signupEmail, signupPassword } = req.body;
+
+        console.log("Received registration request:", req.body);
+
+        if (!signupUsername || !signupEmail || !signupPassword) {
+          console.log("Missing required fields");
+          return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const existingUser = await usersCollection.findOne({ email: signupEmail });
+        if (existingUser) {
+          console.log("Email already registered:", signupEmail);
+          return res.status(400).json({ message: "Email already registered" });
+        }
+
+        const hashedPassword = await bcrypt.hash(signupPassword, 10);
+        console.log("Hashed password:", hashedPassword);
+
+        const newUser = { username: signupUsername, email: signupEmail, password: hashedPassword, playlists: [] };
+        const result = await usersCollection.insertOne(newUser);
+        const createdUser = await usersCollection.findOne({ _id: result.insertedId });
+        console.log("User created:", createdUser);
+        res.status(201).json(createdUser);
       } catch (err) {
-        console.error("Error fetching users:", err);
+        console.error("Error registering user:", err);
+        res.status(500).send(err);
+      }
+    });
+
+    app.post("/api/login", async (req, res) => {
+      try {
+        const { email, password } = req.body;
+        const user = await usersCollection.findOne({ email });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+          return res.status(400).json({ message: "Invalid email or password" });
+        }
+        res.json({ message: "Login successful", user });
+      } catch (err) {
+        console.error("Error logging in user:", err);
         res.status(500).send(err);
       }
     });

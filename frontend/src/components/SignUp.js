@@ -1,13 +1,15 @@
 import React from "react";
+import axios from "axios";
 
 class SignUp extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
-      password: "",
-      email: "",
-      error: ""
+      signupUsername: "",
+      signupPassword: "",
+      signupEmail: "",
+      error: "",
+      success: ""
     };
   }
 
@@ -16,50 +18,60 @@ class SignUp extends React.Component {
     this.setState({ [id]: value });
   };
 
-  handleSubmit = (event) => {
+  handleSubmit = async (event) => {
     event.preventDefault();
-    const { email } = this.state;
+    const { signupUsername, signupPassword, signupEmail } = this.state;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      this.setState({ error: "Invalid email format" });
-    } else {
-      this.setState({ error: "" });
+    if (!emailRegex.test(signupEmail)) {
+      this.setState({ error: "Invalid email format", success: "" });
+      return;
+    }
+    if (!signupUsername || !signupPassword || !signupEmail) {
+      this.setState({ error: "All fields are required", success: "" });
+      return;
+    }
+    try {
+      const response = await axios.post("http://localhost:4000/api/register", { signupUsername, signupPassword, signupEmail });
+      this.setState({ success: "Registration successful!", error: "" });
+    } catch (error) {
+      this.setState({ error: error.response?.data?.message || "Registration failed", success: "" });
     }
   };
 
   render() {
-    const { username, password, email, error } = this.state;
+    const { signupUsername, signupPassword, signupEmail, error, success } = this.state;
     return (
       <form onSubmit={this.handleSubmit}>
-        <label htmlFor="username">Username:</label>
+        <label htmlFor="signupUsername">Username:</label>
         <input
           type="text"
           placeholder="Username"
-          id="username"
-          value={username}
+          id="signupUsername"
+          value={signupUsername}
           onChange={this.handleInputChange}
         />
         <br />
-        <label htmlFor="password">Password:</label>
+        <label htmlFor="signupPassword">Password:</label>
         <input
           type="password"
           placeholder="Password"
-          id="password"
-          value={password}
+          id="signupPassword"
+          value={signupPassword}
           onChange={this.handleInputChange}
         />
         <br />
-        <label htmlFor="email">Email:</label>
+        <label htmlFor="signupEmail">Email:</label>
         <input
           type="email"
           placeholder="E-mail"
-          id="email"
-          value={email}
+          id="signupEmail"
+          value={signupEmail}
           onChange={this.handleInputChange}
         />
         <br />
         <button type="submit" id="register">Sign Up</button>
         {error && <p style={{ color: "red" }}>{error}</p>}
+        {success && <p style={{ color: "green" }}>{success}</p>}
       </form>
     );
   }

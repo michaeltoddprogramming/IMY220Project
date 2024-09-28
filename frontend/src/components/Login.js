@@ -1,12 +1,14 @@
 import React from "react";
+import axios from "axios";
 
 class Login extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
+      email: "",
       password: "",
-      error: ""
+      error: "",
+      token: ""
     };
   }
 
@@ -15,32 +17,35 @@ class Login extends React.Component {
     this.setState({ [id]: value });
   };
 
-  handleSubmit = (event) => {
+  handleSubmit = async (event) => {
     event.preventDefault();
-    const { username } = this.state;
-    if (username.length <= 8) {
-      this.setState({ error: "Username must be more than 8 letters" });
-    } else {
-      this.setState({ error: "" });
+    const { email, password } = this.state;
+
+    try {
+      const response = await axios.post("/api/login", { email, password });
+      this.setState({ token: response.data.token, error: "" });
+      localStorage.setItem("token", response.data.token);
+    } catch (error) {
+      this.setState({ error: error.response.data.message });
     }
   };
 
   render() {
-    const { username, password, error } = this.state;
+    const { email, password, error } = this.state;
     return (
       <form onSubmit={this.handleSubmit}>
-        <label htmlFor="username">Username:</label>
+        <label htmlFor="email">Email:</label>
         <input
-          type="text"
-          placeholder="Username"
-          id="username"
-          value={username}
+          type="email"
+          placeholder="Email"
+          id="email"
+          value={email}
           onChange={this.handleInputChange}
         />
         <br />
         <label htmlFor="password">Password:</label>
         <input
-          type="text"
+          type="password"
           placeholder="Password"
           id="password"
           value={password}
