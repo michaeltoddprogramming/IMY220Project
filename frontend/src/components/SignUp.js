@@ -1,5 +1,4 @@
 import React from "react";
-import axios from "axios";
 
 class SignUp extends React.Component {
   constructor(props) {
@@ -31,10 +30,21 @@ class SignUp extends React.Component {
       return;
     }
     try {
-      const response = await axios.post("http://localhost:4000/api/register", { signupUsername, signupPassword, signupEmail });
-      this.setState({ success: "Registration successful!", error: "" });
+      const response = await fetch("http://localhost:4000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ signupUsername, signupPassword, signupEmail })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        this.setState({ success: "Registration successful!", error: "" });
+      } else {
+        this.setState({ error: data.message || "Registration failed", success: "" });
+      }
     } catch (error) {
-      this.setState({ error: error.response?.data?.message || "Registration failed", success: "" });
+      this.setState({ error: "Registration failed", success: "" });
     }
   };
 

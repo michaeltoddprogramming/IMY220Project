@@ -6,7 +6,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 
-dotenv.config(); 
+dotenv.config(); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,17 +30,20 @@ async function startServer() {
 
         console.log("Received registration request:", req.body);
 
+        // Validate input
         if (!signupUsername || !signupEmail || !signupPassword) {
           console.log("Missing required fields");
           return res.status(400).json({ message: "All fields are required" });
         }
 
+        // Check if email already exists
         const existingUser = await usersCollection.findOne({ email: signupEmail });
         if (existingUser) {
           console.log("Email already registered:", signupEmail);
           return res.status(400).json({ message: "Email already registered" });
         }
 
+        // Hash the password
         const hashedPassword = await bcrypt.hash(signupPassword, 10);
         console.log("Hashed password:", hashedPassword);
 
@@ -58,8 +61,15 @@ async function startServer() {
     app.post("/api/login", async (req, res) => {
       try {
         const { email, password } = req.body;
+        console.log("Login attempt with email:", email);
         const user = await usersCollection.findOne({ email });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
+        if (!user) {
+          console.log("User not found with email:", email);
+          return res.status(400).json({ message: "Invalid email or password" });
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log("Password valid:", isPasswordValid);
+        if (!isPasswordValid) {
           return res.status(400).json({ message: "Invalid email or password" });
         }
         res.json({ message: "Login successful", user });

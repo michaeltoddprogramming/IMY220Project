@@ -1,5 +1,4 @@
 import React from "react";
-import axios from "axios";
 
 class Login extends React.Component {
   constructor(props) {
@@ -20,13 +19,27 @@ class Login extends React.Component {
   handleSubmit = async (event) => {
     event.preventDefault();
     const { email, password } = this.state;
-
+    if (!email || !password) {
+      this.setState({ error: "All fields are required" });
+      return;
+    }
     try {
-      const response = await axios.post("/api/login", { email, password });
-      this.setState({ token: response.data.token, error: "" });
-      localStorage.setItem("token", response.data.token);
+      const response = await fetch("http://localhost:4000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        this.setState({ token: data.token, error: "" });
+        localStorage.setItem("token", data.token);
+      } else {
+        this.setState({ error: data.message || "Login failed" });
+      }
     } catch (error) {
-      this.setState({ error: error.response.data.message });
+      this.setState({ error: "Login failed" });
     }
   };
 
@@ -52,7 +65,7 @@ class Login extends React.Component {
           onChange={this.handleInputChange}
         />
         <br />
-        <button type="submit" id="login">Login</button>
+        <button type="submit" id="login">Log In</button>
         {error && <p style={{ color: "red" }}>{error}</p>}
       </form>
     );

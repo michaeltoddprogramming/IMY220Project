@@ -115,52 +115,57 @@ function _startServer() {
           }());
           app.post("/api/login", /*#__PURE__*/function () {
             var _ref2 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee2(req, res) {
-              var _req$body2, email, password, user;
+              var _req$body2, email, password, user, isPasswordValid;
               return _regeneratorRuntime().wrap(function _callee2$(_context2) {
                 while (1) switch (_context2.prev = _context2.next) {
                   case 0:
                     _context2.prev = 0;
                     _req$body2 = req.body, email = _req$body2.email, password = _req$body2.password;
-                    _context2.next = 4;
+                    console.log("Login attempt with email:", email);
+                    _context2.next = 5;
                     return usersCollection.findOne({
                       email: email
                     });
-                  case 4:
+                  case 5:
                     user = _context2.sent;
-                    _context2.t0 = !user;
-                    if (_context2.t0) {
-                      _context2.next = 10;
+                    if (user) {
+                      _context2.next = 9;
                       break;
                     }
-                    _context2.next = 9;
-                    return _bcrypt["default"].compare(password, user.password);
+                    console.log("User not found with email:", email);
+                    return _context2.abrupt("return", res.status(400).json({
+                      message: "Invalid email or password"
+                    }));
                   case 9:
-                    _context2.t0 = !_context2.sent;
-                  case 10:
-                    if (!_context2.t0) {
-                      _context2.next = 12;
+                    _context2.next = 11;
+                    return _bcrypt["default"].compare(password, user.password);
+                  case 11:
+                    isPasswordValid = _context2.sent;
+                    console.log("Password valid:", isPasswordValid);
+                    if (isPasswordValid) {
+                      _context2.next = 15;
                       break;
                     }
                     return _context2.abrupt("return", res.status(400).json({
                       message: "Invalid email or password"
                     }));
-                  case 12:
+                  case 15:
                     res.json({
                       message: "Login successful",
                       user: user
                     });
-                    _context2.next = 19;
+                    _context2.next = 22;
                     break;
-                  case 15:
-                    _context2.prev = 15;
-                    _context2.t1 = _context2["catch"](0);
-                    console.error("Error logging in user:", _context2.t1);
-                    res.status(500).send(_context2.t1);
-                  case 19:
+                  case 18:
+                    _context2.prev = 18;
+                    _context2.t0 = _context2["catch"](0);
+                    console.error("Error logging in user:", _context2.t0);
+                    res.status(500).send(_context2.t0);
+                  case 22:
                   case "end":
                     return _context2.stop();
                 }
-              }, _callee2, null, [[0, 15]]);
+              }, _callee2, null, [[0, 18]]);
             }));
             return function (_x3, _x4) {
               return _ref2.apply(this, arguments);
