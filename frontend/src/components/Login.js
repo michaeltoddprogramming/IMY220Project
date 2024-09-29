@@ -1,26 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-class Login extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: "",
-      password: "",
-      error: "",
-      token: ""
-    };
-  }
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  handleInputChange = (event) => {
+  const handleInputChange = (event) => {
     const { id, value } = event.target;
-    this.setState({ [id]: value });
+    if (id === "email") {
+      setEmail(value);
+    } else if (id === "password") {
+      setPassword(value);
+    }
   };
 
-  handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const { email, password } = this.state;
     if (!email || !password) {
-      this.setState({ error: "All fields are required" });
+      setError("All fields are required");
       return;
     }
     try {
@@ -33,43 +32,40 @@ class Login extends React.Component {
       });
       const data = await response.json();
       if (response.ok) {
-        this.setState({ token: data.token, error: "" });
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("JunKLoginToken", data.token);
+        navigate(`/profile/${data.userId}`);
       } else {
-        this.setState({ error: data.message || "Login failed" });
+        setError(data.message || "Login failed");
       }
     } catch (error) {
-      this.setState({ error: "Login failed" });
+      setError("Login failed");
     }
   };
 
-  render() {
-    const { email, password, error } = this.state;
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          placeholder="Email"
-          id="email"
-          value={email}
-          onChange={this.handleInputChange}
-        />
-        <br />
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          placeholder="Password"
-          id="password"
-          value={password}
-          onChange={this.handleInputChange}
-        />
-        <br />
-        <button type="submit" id="login">Log In</button>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
-    );
-  }
-}
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="email">Email:</label>
+      <input
+        type="email"
+        placeholder="Email"
+        id="email"
+        value={email}
+        onChange={handleInputChange}
+      />
+      <br />
+      <label htmlFor="password">Password:</label>
+      <input
+        type="password"
+        placeholder="Password"
+        id="password"
+        value={password}
+        onChange={handleInputChange}
+      />
+      <br />
+      <button type="submit" id="login">Log In</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </form>
+  );
+};
 
 export default Login;

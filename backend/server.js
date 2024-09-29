@@ -5,8 +5,9 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-dotenv.config(); // Load environment variables
+dotenv.config(); 
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,20 +31,17 @@ async function startServer() {
 
         console.log("Received registration request:", req.body);
 
-        // Validate input
         if (!signupUsername || !signupEmail || !signupPassword) {
           console.log("Missing required fields");
           return res.status(400).json({ message: "All fields are required" });
         }
 
-        // Check if email already exists
         const existingUser = await usersCollection.findOne({ email: signupEmail });
         if (existingUser) {
           console.log("Email already registered:", signupEmail);
           return res.status(400).json({ message: "Email already registered" });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(signupPassword, 10);
         console.log("Hashed password:", hashedPassword);
 
@@ -72,11 +70,18 @@ async function startServer() {
         if (!isPasswordValid) {
           return res.status(400).json({ message: "Invalid email or password" });
         }
-        res.json({ message: "Login successful", user });
+        // Generate a token using JWT
+        const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.json({ message: "Login successful", token, userId: user._id });
       } catch (err) {
         console.error("Error logging in user:", err);
         res.status(500).send(err);
       }
+    });
+
+    // Logout endpoint
+    app.post("/api/logout", (req, res) => {
+      res.redirect('/splash');
     });
 
     app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
