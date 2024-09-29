@@ -33,6 +33,7 @@ const Login = () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem("JunKLoginToken", data.token);
+        localStorage.setItem("JunKUserId", data.userId); // Store user ID in local storage
         navigate(`/profile/${data.userId}`);
       } else {
         setError(data.message || "Login failed");

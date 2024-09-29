@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack && babel backend/server.js -d backend/dist",
     "start": "npm run build && node backend/dist/server.js",
-    "watch": "webpack -w"
+    "watch": "webpack -w",
+    "start:backend": "nodemon backend/server.js",
+    "start:frontend": "react-scripts start"
   },
   "author": "Michael Todd",
   "license": "ISC",

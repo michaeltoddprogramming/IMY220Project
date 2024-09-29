@@ -5927,6 +5927,7 @@ var Login = function Login() {
             data = _context.sent;
             if (response.ok) {
               localStorage.setItem("JunKLoginToken", data.token);
+              localStorage.setItem("JunKUserId", data.userId); // Store user ID in local storage
               navigate("/profile/".concat(data.userId));
             } else {
               setError(data.message || "Login failed");
