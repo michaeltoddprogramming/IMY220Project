@@ -2,7 +2,7 @@ import React from 'react';
 import Login from '../components/Login'
 import SignUp from '../components/SignUp';
 
-class Splash extends React.Component {
+class Welcome extends React.Component {
   render() {
     return (
       <div>
@@ -16,4 +16,4 @@ class Splash extends React.Component {
   }
 }
 
-export default Splash;
+export default Welcome;

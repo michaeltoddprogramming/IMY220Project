@@ -14,8 +14,14 @@ const PORT = process.env.PORT || 4000;
 const mongoURI = `mongodb+srv://${process.env.MONGODBUSERNAME}:${encodeURIComponent(process.env.MONGODBPASSWORD)}@imy220.uipep.mongodb.net/?retryWrites=true&w=majority&appName=IMY220`;
 const client = new MongoClient(mongoURI, { serverSelectionTimeoutMS: 5000 });
 
-app.use(cors());
+app.use(cors({
+  origin: '*', 
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
+}));
 app.use(bodyParser.json());
+
+
 
 async function startServer() {
   try {
@@ -24,6 +30,21 @@ async function startServer() {
 
     const db = client.db("JunK");
     const usersCollection = db.collection("users");
+    const playlistsCollection = db.collection("playlists");
+    const songsCollection = db.collection("songs");
+
+    const authenticateToken = (req, res, next) => {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (token == null) return res.sendStatus(401);
+
+      jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+      });
+    };
 
     app.post("/api/register", async (req, res) => {
       try {
@@ -70,7 +91,7 @@ async function startServer() {
         if (!isPasswordValid) {
           return res.status(400).json({ message: "Invalid email or password" });
         }
-        // Generate a token using JWT
+
         const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ message: "Login successful", token, userId: user._id });
       } catch (err) {
@@ -79,9 +100,37 @@ async function startServer() {
       }
     });
 
-    // Logout endpoint
     app.post("/api/logout", (req, res) => {
-      res.redirect('/splash');
+      res.redirect('/welcome');
+    });
+
+    app.get("/api/user", authenticateToken, async (req, res) => {
+      try {
+        const userId = new ObjectId(req.user.userId); 
+        const user = await usersCollection.findOne({ _id: userId }, { projection: { password: 0 } }); // Exclude password from the result
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+      } catch (err) {
+        console.error("Error fetching user information:", err);
+        res.status(500).send(err);
+      }
+    });
+
+    app.get("/api/playlists/:userId", authenticateToken, async (req, res) => {
+      try {
+        const userId = new ObjectId(req.params.userId); 
+        const playlists = await playlistsCollection.find({ userId }).toArray();
+        const playlistsWithSongs = await Promise.all(playlists.map(async (playlist) => {
+          const songs = await songsCollection.find({ _id: { $in: playlist.songs } }).toArray();
+          return { ...playlist, songs };
+        }));
+        res.json(playlistsWithSongs);
+      } catch (err) {
+        console.error("Error fetching playlists:", err);
+        res.status(500).send(err);
+      }
     });
 
     app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
@@ -90,7 +139,7 @@ async function startServer() {
       res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'public', 'index.html'));
     });
 
-    app.listen(PORT, () => {
+    app.listen(process.env.PORT || 4000, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (err) {
