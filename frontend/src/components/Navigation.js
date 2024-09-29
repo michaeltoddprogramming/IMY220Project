@@ -14,7 +14,7 @@ const Navigation = () => {
       });
       if (response.ok) {
         localStorage.removeItem("JunKLoginToken");
-        navigate('/splash');
+        navigate('/welcome');
       } else {
         console.error("Logout failed");
       }
@@ -28,7 +28,7 @@ const Navigation = () => {
       <Link to="/" style={{ padding: '7px' }}>Home</Link>
       <Link to="/profile/:userId" style={{ padding: '7px' }}>Profile</Link>
       <Link to="/playlist/:playlistId" style={{ padding: '7px' }}>Playlist</Link>
-      <Link to="/splash" style={{ padding: '7px' }}>Login</Link>
+      <Link to="/welcome" style={{ padding: '7px' }}>Login</Link>
       <button onClick={handleLogout} style={{ padding: '7px' }}>Logout</button>
     </nav>
   );
