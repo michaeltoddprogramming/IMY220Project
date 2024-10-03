@@ -7,20 +7,20 @@ services:
     ports:
       - "4000:4000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
       - NODE_ENV=development
 
   frontend:
     image: node:20
     container_name: frontend
-    working_dir: /app
+    working_dir: frontend
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/usr/src/app
+      - $PWD/node_modules
     ports:
       - "3000:3000"
-    command: ["npm", "start", "start:frontend"]
+    command: ["npm", "run", "start:frontend"]
     environment:
       - CHOKIDAR_USEPOLLING=true
