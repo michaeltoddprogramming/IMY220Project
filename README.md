@@ -14,6 +14,6 @@
 **Docker**
 
     docker build -t junk .
-    docker run --name junk -p 4000:4000 junk
+    docker run --name junk -p 3000:3000 junk
     docker stop junk
     docker rm junk

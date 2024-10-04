@@ -1,19 +1,13 @@
 FROM node:20
 
-WORKDIR /michael/UP/IMY220/Project
-
-COPY package*.json ./
-
-RUN npm install
-
-RUN npm install -g nodemon
+WORKDIR /app
 
 COPY . .
 
-COPY .env .env
+RUN npm install
 
-ENV PORT=4000
+CMD ["npm", "start"]
 
-EXPOSE 4000
+ENV PORT=3000
 
-CMD ["npm", "start", "start:backend"]
+EXPOSE 3000

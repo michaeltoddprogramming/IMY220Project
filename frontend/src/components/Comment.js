@@ -1,12 +1,14 @@
-import React from 'react';
+import React from "react";
 
-const Comment = ({ comment }) => {
-  return (
-    <div className="comment-text-author">
-      <p>{comment.text}</p>
-      <p>By: {comment.author}</p>
-    </div>
-  );
-};
+class Comment extends React.Component {
+    render() {
+        const { author, comment } = this.props;
+        return(
+            <div>
+                <p>{ author } : { comment }</p>
+            </div>
+        );
+    }
+}
 
 export default Comment;

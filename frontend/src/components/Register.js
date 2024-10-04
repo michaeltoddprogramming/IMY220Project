@@ -1,26 +1,26 @@
 import React from "react";
-import { setCookie, getCookie, deleteCookie } from '../utils/cookie';
 
-class Login extends React.Component {
+class Register extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: '',
+            username: '',
             password: '',
+            email: '',
             problems: {}
-        }
+        };
     }
 
     handleChange = (event) => {
         const { name, value } = event.target;
-        this.setState({[name] : value });
-    }
+        this.setState({ [name]: value });
+    };
 
     validate = () => {
         const problems = {};
 
-        if (!this.state.email) {
-            problems.email = "Email is empty";
+        if (!this.state.username) {
+            problems.username = "Username is empty";
         }
 
         if (!this.state.password) {
@@ -29,35 +29,39 @@ class Login extends React.Component {
             problems.password = "Password is less than 5 characters";
         }
 
+        if (!this.state.email) {
+            problems.email = "Email is empty";
+        } else if (!/\S+@\S+\.\S+/.test(this.state.email)) {
+            problems.email = "Email is invalid";
+        }
+
         this.setState({ problems });
         return Object.keys(problems).length === 0;
-    }
+    };
 
     handleSubmit = async (event) => {
         event.preventDefault();
         if (this.validate()) {
             try {
-                const response = await fetch('/api/login', {
+                const response = await fetch('/api/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        email: this.state.email,
-                        password: this.state.password
+                        username: this.state.username,
+                        password: this.state.password,
+                        email: this.state.email
                     })
                 });
-
                 if (response.ok) {
-                    const data = await response.json();
-                    setCookie('userId', data.userId, 1); 
-                    window.location.href = '/home'; 
+                    console.log('User registered successfully');
                 } else {
-                    alert("Login failed");
+                    console.log('Registration failed');
                 }
-           } catch (error) {
-                console.error("Error:", error);
-           }
+            } catch (error) {
+                console.error('Error:', error);
+            }
         } else {
             this.setState((prevState) => {
                 console.log(prevState.problems);
@@ -70,24 +74,24 @@ class Login extends React.Component {
         return (
             <form onSubmit={this.handleSubmit} className="bg-primary rounded-lg p-8 flex flex-col space-y-4 w-full max-w-md mx-auto">
                 <div className="flex flex-col">
-                    <label htmlFor="emailLogin" className="text-white mb-2">Email</label>
+                    <label htmlFor="usernameRegister" className="text-white mb-2">Username</label>
                     <input
                         type="text"
-                        placeholder="Email"
-                        id="emailLogin"
-                        name="email"
-                        value={this.state.email}
+                        placeholder="Username"
+                        id="usernameRegister"
+                        name="username"
+                        value={this.state.username}
                         onChange={this.handleChange}
                         className="p-2 rounded border border-gray-300"
                     />
-                    {this.state.problems.email && <span className="text-red-500 mt-1">{this.state.problems.email}</span>}
+                    {this.state.problems.username && <span className="text-red-500 mt-1">{this.state.problems.username}</span>}
                 </div>
                 <div className="flex flex-col">
-                    <label htmlFor="passwordLogin" className="text-white mb-2">Password</label>
+                    <label htmlFor="passwordRegister" className="text-white mb-2">Password</label>
                     <input
                         type="password"
                         placeholder="Password"
-                        id="passwordLogin"
+                        id="passwordRegister"
                         name="password"
                         value={this.state.password}
                         onChange={this.handleChange}
@@ -95,12 +99,25 @@ class Login extends React.Component {
                     />
                     {this.state.problems.password && <span className="text-red-500 mt-1">{this.state.problems.password}</span>}
                 </div>
+                <div className="flex flex-col">
+                    <label htmlFor="emailRegister" className="text-white mb-2">Email</label>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        id="emailRegister"
+                        name="email"
+                        value={this.state.email}
+                        onChange={this.handleChange}
+                        className="p-2 rounded border border-gray-300"
+                    />
+                    {this.state.problems.email && <span className="text-red-500 mt-1">{this.state.problems.email}</span>}
+                </div>
                 <button type="submit" className="bg-white text-secondary py-2 px-4 rounded hover:bg-gray-200 transition duration-300">
-                    Login
+                    Register
                 </button>
             </form>
         );
     }
-};
+}
 
-export default Login;
+export default Register;

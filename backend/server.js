@@ -1,151 +1,451 @@
-import express from "express";
-import path from "path";
-import { MongoClient, ObjectId } from "mongodb";
-import bodyParser from "body-parser";
-import cors from "cors";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+const express = require('express');
+const { MongoClient } = require('mongodb');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+require('dotenv').config(); 
 
-dotenv.config(); 
+const url = `mongodb+srv://${process.env.MONGODBUSERNAME}:${encodeURIComponent(process.env.MONGODBPASSWORD)}@imy220.uipep.mongodb.net/?retryWrites=true&w=majority&appName=IMY220`;
+const client = new MongoClient(url);
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const mongoURI = `mongodb+srv://${process.env.MONGODBUSERNAME}:${encodeURIComponent(process.env.MONGODBPASSWORD)}@imy220.uipep.mongodb.net/?retryWrites=true&w=majority&appName=IMY220`;
-const client = new MongoClient(mongoURI, { serverSelectionTimeoutMS: 5000 });
+app.use(express.json()); 
+app.use(cookieParser()); 
 
-app.use(cors({
-  origin: '*', 
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
-}));
-app.use(bodyParser.json());
-
-
+app.use(express.static('./frontend/public'));
 
 async function startServer() {
-  try {
     await client.connect();
-    console.log("Connected to MongoDB");
+    console.log("--------------------------------\n");
+    console.info("Connected to JunK Database :)\n");
+    console.log("--------------------------------\n");
 
-    const db = client.db("JunK");
-    const usersCollection = db.collection("users");
-    const playlistsCollection = db.collection("playlists");
-    const songsCollection = db.collection("songs");
+    const db = client.db('JunK');
+    const SongCollection = db.collection('songs');
+    const PlaylistCollection = db.collection('playlists');
+    const UserCollection = db.collection('users');
 
-    const authenticateToken = (req, res, next) => {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-
-      if (token == null) return res.sendStatus(401);
-
-      jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-      });
-    };
-
-    app.post("/api/register", async (req, res) => {
-      try {
-        const { signupUsername, signupEmail, signupPassword } = req.body;
-
-        console.log("Received registration request:", req.body);
-
-        if (!signupUsername || !signupEmail || !signupPassword) {
-          console.log("Missing required fields");
-          return res.status(400).json({ message: "All fields are required" });
+    app.get('/api/songs', async (req, res) => {
+        try {
+            const songs = await SongCollection.find().sort({ dateAdded: -1 }).toArray();
+            res.json(songs);
+        } catch (err) {
+            res.status(500).send(err);
         }
-
-        const existingUser = await usersCollection.findOne({ email: signupEmail });
-        if (existingUser) {
-          console.log("Email already registered:", signupEmail);
-          return res.status(400).json({ message: "Email already registered" });
-        }
-
-        const hashedPassword = await bcrypt.hash(signupPassword, 10);
-        console.log("Hashed password:", hashedPassword);
-
-        const newUser = { username: signupUsername, email: signupEmail, password: hashedPassword, playlists: [] };
-        const result = await usersCollection.insertOne(newUser);
-        const createdUser = await usersCollection.findOne({ _id: result.insertedId });
-        console.log("User created:", createdUser);
-        res.status(201).json(createdUser);
-      } catch (err) {
-        console.error("Error registering user:", err);
-        res.status(500).send(err);
-      }
     });
 
+    app.get('/api/users/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const user = await UserCollection.findOne({ _id: id });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.status(200).json(user);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    app.get('/api/playlists/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const user = await UserCollection.findOne({ _id: id });
+            
+            if (!user) {
+                return res.status(404).send("User not found");
+            }
+    
+            const playlistIDs = user.playlistIDs || [];
+    
+            const playlists = await PlaylistCollection.find({ playlistID: { $in: playlistIDs } }).toArray();
+    
+            res.json(playlists);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/api/playlist/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const playlist = await PlaylistCollection.findOne({ playlistID: id });
+            
+            if (!playlist) {
+                return res.status(404).send("playlist not found");
+            }
+
+    
+            res.json(playlist);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/api/playlist/:id/songs', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const playlist = await PlaylistCollection.findOne({ playlistID: id });
+
+            if (!playlist) {
+                return res.status(404).send("Playlist not found");
+            }
+
+            const songIDs = playlist.songIDs || [];
+
+            const songs = await SongCollection.find({ songID: { $in: songIDs } }).toArray();
+
+            res.json(songs);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+
+    app.post('/api/register', async (req, res) => {
+        const { username, password, email } = req.body;
+        try {
+            const count = await UserCollection.countDocuments();
+            const newId = `user0${count + 1}`;
+    
+            const hashedPassword = await bcrypt.hash(password, 10);
+    
+            const newUser = {
+                _id: newId.toString(), 
+                description: '', 
+                imageUrl: '/assets/images/placeholder.png', 
+                username, 
+                email,
+                password: hashedPassword, 
+                playlistIDs: [],
+                followerIDs: [],
+                followingIDs: []
+            };
+            await UserCollection.insertOne(newUser);
+            res.status(201).send("User registered successfully");
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+    
     app.post("/api/login", async (req, res) => {
-      try {
-        const { email, password } = req.body;
-        console.log("Login attempt with email:", email);
-        const user = await usersCollection.findOne({ email });
-        if (!user) {
-          console.log("User not found with email:", email);
-          return res.status(400).json({ message: "Invalid email or password" });
+        try {
+            const { email, password } = req.body;
+            console.log("Login attempt with email:", email);
+            const user = await UserCollection.findOne({ email });
+            if (!user) {
+                console.log("User not found with email:", email);
+                return res.status(400).json({ message: "Invalid email or password" });
+            }
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            console.log("Password valid:", isPasswordValid);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: "Invalid email or password" });
+            }
+    
+            const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, sameSite: 'None', secure: true });
+            res.json({ message: "Login successful", token, userId: user._id });
+        } catch (err) {
+            console.error("Error logging in user:", err);
+            res.status(500).send(err);
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log("Password valid:", isPasswordValid);
-        if (!isPasswordValid) {
-          return res.status(400).json({ message: "Invalid email or password" });
+    });
+
+    app.post('/api/logout', (req, res) => {
+        res.clearCookie('token', { httpOnly: true, sameSite: 'None', secure: true });
+        res.status(200).send("Logged out successfully");
+    });
+
+    app.delete('/api/user/:id', async (req, res) => {
+        const { id } = req.params;
+        const loggedInUserId = req.headers['user-id']; 
+    
+        if (id !== loggedInUserId) {
+            return res.status(403).json({ message: "You can only delete your own account" });
         }
-
-        const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ message: "Login successful", token, userId: user._id });
-      } catch (err) {
-        console.error("Error logging in user:", err);
-        res.status(500).send(err);
-      }
-    });
-
-    app.post("/api/logout", (req, res) => {
-      res.redirect('/welcome');
-    });
-
-    app.get("/api/user", authenticateToken, async (req, res) => {
-      try {
-        const userId = new ObjectId(req.user.userId); 
-        const user = await usersCollection.findOne({ _id: userId }, { projection: { password: 0 } }); // Exclude password from the result
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
+    
+        try {
+            const result = await UserCollection.deleteOne({ _id: id });
+            if (result.deletedCount === 0) {
+                return res.status(404).json({ message: "User not found" });
+            }
+            res.status(200).json({ message: "Account deleted successfully" });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
-        res.json(user);
-      } catch (err) {
-        console.error("Error fetching user information:", err);
-        res.status(500).send(err);
-      }
     });
 
-    app.get("/api/playlists/:userId", authenticateToken, async (req, res) => {
-      try {
-        const userId = new ObjectId(req.params.userId); 
-        const playlists = await playlistsCollection.find({ userId }).toArray();
-        const playlistsWithSongs = await Promise.all(playlists.map(async (playlist) => {
-          const songs = await songsCollection.find({ _id: { $in: playlist.songs } }).toArray();
-          return { ...playlist, songs };
-        }));
-        res.json(playlistsWithSongs);
-      } catch (err) {
-        console.error("Error fetching playlists:", err);
-        res.status(500).send(err);
-      }
+    app.get('/api/user/:userId/following/playlists', async (req, res) => {
+        try {
+            const userId = req.params.userId;
+            const user = await UserCollection.findOne({ _id: userId });
+
+            if (!user) {
+                return res.status(404).send('User not found');
+            }
+
+            const friends = user.followingIDs || [];
+
+            const playlists = await PlaylistCollection.find({ userIDs: { $in: friends }}).toArray();
+            res.json(playlists);
+        } catch (err) {
+            console.error('Error fetching playlists:', err);
+            res.status(500).send(err);
+        }
     });
 
-    app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
+    app.get('/api/users/:id/followers', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const user = await UserCollection.findOne({ _id: id });
+            if (!user) {
+                return res.status(404).send("User not found");
+            }
+    
+            const followers = await UserCollection.find({ _id: { $in: user.followerIDs } }).toArray();
+            res.json(followers);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/api/users/:id/following', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const user = await UserCollection.findOne({ _id: id });
+            if (!user) {
+                return res.status(404).send("User not found");
+            }
+    
+            const following = await UserCollection.find({ _id: { $in: user.followingIDs } }).toArray();
+            res.json(following);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+
+    app.put('/api/users/:id', async (req, res) => {
+        const { id } = req.params;
+        const { username, description } = req.body;
+        try {
+            const result = await UserCollection.updateOne(
+                { _id: id },
+                { $set: { username, description } }
+            );
+            if (result.matchedCount === 0) {
+                return res.status(404).json({message: "User not found" });
+            }
+            res.status(200).json({ message: "Profile updated successfully" });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    app.put('/api/playlist/:id', async (req, res) => {
+        const { id } = req.params;
+        const { name, description } = req.body;
+        const loggedInUserId = req.headers['user-id']; 
+    
+        try {
+            const playlist = await PlaylistCollection.findOne({ playlistID: id });
+            if (!playlist) {
+                return res.status(404).json({ message: "Playlist not found" });
+            }
+    
+            if (!playlist.userID.includes(loggedInUserId)) {
+                return res.status(403).json({ message: "You are not the owner of this playlist" });
+            }
+    
+            const result = await PlaylistCollection.updateOne(
+                { playlistID: id },
+                { $set: { name, description } }
+            );
+    
+            if (result.matchedCount === 0) {
+                return res.status(404).json({ message: "Playlist not found" });
+            }
+    
+            res.status(200).json({ message: "Playlist updated successfully" });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    app.put('/api/:id/createplaylist', async (req, res) => {
+        const { id } = req.params;
+        const { name, description } = req.body;
+
+        try {
+            const user = await UserCollection.findOne({ _id: id });
+            if (!user) {
+               return res.status(404).json ({ message: "User not found" });
+            }
+
+            const count = await PlaylistCollection.countDocuments();
+            const newId = `PL0${count + 1}`;
+
+            const newPlaylist = {
+                playlistID: newId.toString(),
+                name,
+                description, 
+                imageUrl: '/assets/images/placeholder.png', 
+                comments: [],
+                userIDs: [
+                    id
+                ],
+                songIDs: [] };
+
+            await PlaylistCollection.insertOne(newPlaylist);
+
+            await UserCollection.updateOne(
+                { _id: id },
+                { $push: { playlistIDs: newId.toString() } }
+            );
+
+            res.status(201).send("Playlist created successfully");
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.delete('/api/playlists/:playlistId/remove', async (req, res) => {
+        const { playlistId } = req.params;
+        const loggedInUserId = req.headers['user-id'];
+    
+        try {
+            const playlist = await PlaylistCollection.findOne({ playlistID: playlistId });
+            if (!playlist) {
+                return res.status(404).json({ message: "Playlist not found" });
+            }
+    
+            if (!playlist.userIDs.includes(loggedInUserId)) {
+                return res.status(403).json({ message: "You do not have this playlist in your library" });
+            }
+    
+            await UserCollection.updateOne(
+                { _id: loggedInUserId },
+                { $pull: { playlistIDs: playlistId } }
+            );
+    
+            res.status(200).json({ message: "Playlist removed from user library successfully" });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.post('/api/playlists/:playlistId/add', async (req, res) => {
+        const { playlistId } = req.params;
+        const { trackId } = req.body;
+    
+        try {
+            const playlist = await PlaylistCollection.findOne({ playlistID: playlistId });
+            if (!playlist) {
+                return res.status(404).json({ message: "Playlist not found" });
+            }
+    
+            await PlaylistCollection.updateOne(
+                { playlistID: playlistId },
+                { $push: { songIDs: trackId } }
+            );
+
+            await SongCollection.updateOne(
+                { songID: trackId },
+                { $addToSet: { playlistIDs: playlistId } }
+            );
+    
+            res.status(200).json({ message: "Song added to playlist successfully" });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.put('/api/createsong', async (req, res) => {
+        const { title, link } = req.body;
+    
+        if (!title || !link) {
+            return res.status(400).json({ message: 'Title and link are required' });
+        }
+    
+        try {
+            const songID = generateSongID(title);
+    
+            const newSong = {
+                songID,
+                title,
+                link,
+                playlistIDs: [],
+                userIDs: [],
+                dateAdded: new Date()
+            };
+    
+            await SongCollection.insertOne(newSong);
+    
+            res.status(201).json({ message: 'Song created successfully', song: newSong });
+        } catch (error) {
+            console.error('Error creating song:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+    
+    function generateSongID(title) {
+        return title
+            .split(' ')
+            .map(word => word[0].toLowerCase())
+            .join('');
+    }
+
+    app.delete('/api/songs/:songID', async (req, res) => {
+        const { songID } = req.params;
+    
+        try {
+            const result = await SongCollection.deleteOne({ songID });
+    
+            if (result.deletedCount === 0) {
+                return res.status(404).json({ message: 'Song not found' });
+            }
+    
+            res.status(200).json({ message: 'Song deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting song:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+
+    app.get('/api/search', async (req, res) => {
+        const { term, type } = req.query;
+    
+        try {
+            let results;
+            switch (type) {
+                case 'playlists':
+                    results = await PlaylistCollection.find({ name: { $regex: term, $options: 'i' } }).toArray();
+                    break;
+                case 'songs':
+                    results = await SongCollection.find({ title: { $regex: term, $options: 'i' } }).toArray();
+                    break;
+                case 'users':
+                    results = await UserCollection.find({ username: { $regex: term, $options: 'i' } }).toArray();
+                    break;
+                default:
+                    return res.status(400).json({ message: 'Invalid search type' });
+            }
+            res.status(200).json(results);
+        } catch (error) {
+            console.error('Error searching:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
 
     app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'public', 'index.html'));
+        res.sendFile('index.html', { root: './frontend/public' });
     });
 
-    app.listen(process.env.PORT || 4000, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error("Failed to connect to MongoDB", err);
-    process.exit(1);
-  }
-}
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log("--------------------------------\n");
+        console.log(`Hosted on port ${PORT}\n`);
+        console.log("--------------------------------\n");
+    })
+};
 
 startServer();

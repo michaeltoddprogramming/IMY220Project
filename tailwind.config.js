@@ -1,19 +1,19 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    '.src/**/*.{js,jsx,ts,tsx}',
-    '.public/index.html',
-  ],
+  content: ["./frontend/src/**/*.{html,js}"],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Passero One', 'sans-serif'],
+        lightning: ['Lightning', 'sans-serif'],
+        liberation: ['Liberation', 'serif'],
+        sans: ['Passero One', 'sans-serif']
       },
       colors: {
-        primary: '#008584',
-        secondary: '#006666',
+        primary: '#006666',
+        secondary: '#008584',
       },
     },
   },
   plugins: [],
 }
+

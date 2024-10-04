@@ -1,11 +1,11 @@
 import React from "react";
 import { getCookie } from '../utils/cookie';
 
-class EditPlaylist extends React.Component {
+class EditProfile extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            name: props.name,
+            username: props.username,
             description: props.description
         };
     }
@@ -17,17 +17,15 @@ class EditPlaylist extends React.Component {
 
     handleSubmit = (event) => {
         event.preventDefault();
-        const { name, description } = this.state;
+        const { username, description } = this.state;
         const userID = getCookie('userId');
-        const { playlistID } = this.props;
 
-        fetch(`/api/playlist/${playlistID}`, {
+        fetch(`/api/users/${userID}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'user-id': userID // Send user ID in headers
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, description })
+            body: JSON.stringify({ username, description })
         })
         .then(response => {
             if (!response.ok) {
@@ -36,26 +34,26 @@ class EditPlaylist extends React.Component {
             return response.json();
         })
         .then(data => {
-            console.log('Playlist updated successfully:', data);
+            console.log('Profile updated successfully:', data);
         })
         .catch(error => {
-            console.error('Error updating playlist:', error);
+            console.error('Error updating profile:', error);
         });
     }
 
     render() {
-        const { name, description } = this.state;
+        const { username, description } = this.state;
         return (
             <form onSubmit={this.handleSubmit}>
-                <label htmlFor="name">Edit playlist name</label>
+                <label htmlFor="username">Edit name here</label>
                 <input 
                     type="text" 
-                    id="name" 
-                    value={name} 
+                    id="username" 
+                    value={username} 
                     onChange={this.handleInputChange} 
                 />
                 <br/>
-                <label htmlFor="description">Edit description</label>
+                <label htmlFor="description">Edit description here</label>
                 <input 
                     type="text" 
                     id="description" 
@@ -63,10 +61,10 @@ class EditPlaylist extends React.Component {
                     onChange={this.handleInputChange} 
                 />
                 <br/>
-                <button type="submit">Edit Playlist</button>
+                <button type="submit">Submit Changes</button>
             </form>
         );
     }
 }
 
-export default EditPlaylist;
+export default EditProfile;

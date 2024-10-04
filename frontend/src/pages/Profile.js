@@ -1,176 +1,147 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import Navigation from "../components/Navigation";
-import Create from "../components/Create";
-import Profiles from "../components/Profiles";
-import Edit from "../components/Edit";
-import PlaylistPreview from "../components/PlaylistPreview";
-import Song from "../components/Song";
-import Followings from "../components/Followings";
+import React from 'react';
+import { useParams} from 'react-router-dom';
+import Header from "../components/Header.js";
+import ProfileComponent from '../components/ProfileComponent.js';
+import Followers from '../components/Followers.js';
+import Following from '../components/Following.js';
+import EditProfile from '../components/EditProfile.js';
+import CreatePlaylist from '../components/CreatePlaylist.js';
+import { getCookie, deleteCookie } from '../utils/cookie';
 
-const followersData = [
-  { username: "MusicLover123", profilePicture: "/assets/images/placeholder.png", bio: "Music is life", numFollowers: 150, socials: "Twitter", age: 25 },
-  { username: "TuneMaster", profilePicture: "/assets/images/placeholder.png", bio: "Living for the beats", numFollowers: 200, socials: "Facebook", age: 28 },
-];
+class Profile extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            user: null,
+            playlists: [],
+            followers: [],
+            following: [],
+            loggedInUserId: null,
+        };
+    }
 
-const followingData = [
-  { username: "BeatGuru", profilePicture: "/assets/images/placeholder.png", bio: "All about the rhythm", numFollowers: 180, socials: "Instagram", age: 22 },
-  { username: "MelodyMaker", profilePicture: "/assets/images/placeholder.png", bio: "Creating melodies", numFollowers: 220, socials: "Snapchat", age: 24 },
-];
+    async componentDidMount() {
+        const { id } = this.props.params;
+        const loggedInUserId = getCookie('userId');
+        this.setState({ loggedInUserId });
+        await this.fetchUser(id);
+        await this.fetchPlaylists(id);
+        await this.fetchFollowers(id);
+        await this.fetchFollowing(id);
+    }
 
-const Profile = () => {
-  const { userId } = useParams();
-  const [profile, setProfile] = useState(null);
-  const [playlists, setPlaylists] = useState([]);
-  const [showCreatePlaylistForm, setShowCreatePlaylistForm] = useState(false);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isFriend, setIsFriend] = useState(false);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
-  const [showFollowers, setShowFollowers] = useState(true);
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const response = await fetch(`http://localhost:4000/api/user`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('JunKLoginToken')}`
-          }
-        });
-        const data = await response.json();
-        setProfile(data);
-        setIsOwnProfile(userId === data._id);
-      } catch (error) {
-        console.error('Error fetching user information:', error);
-      }
+    fetchUser = async (id) => {
+        try {
+            const response = await fetch(`/api/users/${id}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            this.setState({ user: data });
+        } catch (error) {
+            console.log("Error fetching user data:", error);
+        }
     };
 
-    const fetchPlaylists = async () => {
-      try {
-        const response = await fetch(`http://localhost:4000/api/playlists/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('JunKLoginToken')}`
-          }
-        });
-        const data = await response.json();
-        setPlaylists(data);
-      } catch (error) {
-        console.error('Error fetching playlists:', error);
-      }
+    fetchPlaylists = async (id) => {
+        try {
+            const response = await fetch(`/api/playlists/${id}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            this.setState({ playlists: data });
+        } catch (error) {
+            console.log("Error fetching playlists:", error);
+        }
     };
 
-    fetchProfileData();
-    fetchPlaylists();
-  }, [userId]);
+    fetchFollowers = async (id) => {
+        try {
+            const response = await fetch(`/api/users/${id}/followers`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            this.setState({ followers: data });
+        } catch (error) {
+            console.log("Error fetching followers:", error);
+        }
+    };
 
-  const handleCreatePlaylistToggle = () => {
-    setShowCreatePlaylistForm(!showCreatePlaylistForm);
-  };
+    fetchFollowing = async (id) => {
+        try {
+            const response = await fetch(`/api/users/${id}/following`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            this.setState({ following: data });
+        } catch (error) {
+            console.log("Error fetching following:", error);
+        }
+    };
 
-  const handleEditProfileToggle = () => {
-    setIsEditingProfile(!isEditingProfile);
-  };
+    handleDeleteAccount = async () => {
+        const { user, loggedInUserId } = this.state;
+        if (user._id !== loggedInUserId) {
+            return;
+        }
 
-  const handleFriendToggle = () => {
-    setIsFriend(!isFriend);
-  };
+        try {
+            const response = await fetch(`/api/user/${user._id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'user-id': loggedInUserId,
+                },
+            });
 
-  const updateProfile = (updatedProfile) => {
-    setProfile((prevProfile) => ({ ...prevProfile, ...updatedProfile }));
-    setIsEditingProfile(!isEditingProfile);
-  };
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
 
-  return (
-    <div>
-      <Navigation />
-      {/* Show Create Playlist button */}
-      <div className="playlist-button">
-        <button onClick={handleCreatePlaylistToggle}>
-          {showCreatePlaylistForm ? "Hide Create Playlist" : "Create Playlist"}
-        </button>
-      </div>
-      {/* Show Create Playlist form */}
-      {showCreatePlaylistForm ? (
-        <Create />
-      ) : (
-        <div className="profile-page">
-          <div className="top">
-            <div className="profile-info">
-              {!isEditingProfile ? (
-                <Profiles
-                  username={profile?.username}
-                  profilePicture={profile?.profilePicture}
-                  bio={profile?.bio}
-                  email={profile?.email}
-                  numFollowers={profile?.numFollowers}
-                  socials={profile?.socials}
-                  age={profile?.age}
-                  toggleEditProfile={handleEditProfileToggle}
-                  isFriend={profile?.isFriend}
-                  onFriendToggle={handleFriendToggle}
-                  currentUser={"Cobus Botha"}
+            deleteCookie('userId');
+            window.location.href = '/'; 
+        } catch (error) {
+            console.log("Error deleting account:", error);
+        }
+    };
+
+    render() {
+        const { user, playlists, followers, following, loggedInUserId } = this.state;
+
+        if (!user) {
+            return <div>Loading...</div>;
+        }
+
+        const isOwnProfile = user._id === loggedInUserId;
+
+        return (
+            <div>
+                <header className="top-0 w-full p-4 flex justify-center z-10">
+                    <h1 className="font-JunK text-8xl">JunK</h1>
+                </header>
+                <Header />
+                <ProfileComponent 
+                    userId={user._id}
+                    username={user.username} 
+                    description={user.description} 
+                    imageUrl={user.imageUrl} 
+                    playlists={playlists} 
                 />
-              ) : (
-                <Edit
-                  username={profile.username}
-                  profilePicture={profile.profilePicture}
-                  bio={profile.bio}
-                  email={profile.email}
-                  updateProfile={updateProfile}
-                  toggleEditProfile={handleEditProfileToggle}
-                />
-              )}
+                <Followers userId={user._id} />
+                <Following userId={user._id} />
+                {isOwnProfile && <EditProfile username={user.username} description={user.description} />}
+                {isOwnProfile && <CreatePlaylist />}
+                {isOwnProfile && <button onClick={this.handleDeleteAccount}>Delete account</button>}
             </div>
-            <div className="follower/following">
-              <div className="follower/following-toggle">
-                <button onClick={() => setShowFollowers(true)}>Followers</button>
-                <button onClick={() => setShowFollowers(false)}>Following</button>
-              </div>
-              {showFollowers ? (
-                <div className="followers">
-                  <h2>Followers</h2>
-                  <Followings users={followersData} type="followers" />
-                </div>
-              ) : (
-                <div className="following-">
-                  <h2>Following</h2>
-                  <Followings users={followingData} type="following" />
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="song/playlist">
-            <div className="users-playlist">
-              <h2>My Playlists</h2>
-              {playlists.map((playlist, index) => (
-                <PlaylistPreview
-                  key={index}
-                  title={playlist.title}
-                  description={playlist.description}
-                  numSongs={playlist.songs.length}
-                  imageURL={playlist.imageURL}
-                  hashtags={playlist.hashtags}
-                  onHashtagClick={() => {}}
-                />
-              ))}
-            </div>
-            <div className="users-songs">
-              <h2>My Songs</h2>
-              {playlists.flatMap(playlist => playlist.songs).map((song, index) => (
-                <Song
-                  key={index}
-                  name={song.title}
-                  artist={song.artist}
-                  link={song.link}
-                  dateAdded={song.dateAdded}
-                  addedBy={song.addedBy}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+        );
+    }
+}
+
+const ProfileWithParams = (props) => {
+    return <Profile {...props} params={useParams()} />;
 };
 
-export default Profile;
+export default ProfileWithParams;
