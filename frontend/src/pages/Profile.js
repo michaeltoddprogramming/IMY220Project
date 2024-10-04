@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams} from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from "../components/Header.js";
 import ProfileComponent from '../components/ProfileComponent.js';
 import Followers from '../components/Followers.js';
@@ -112,29 +112,46 @@ class Profile extends React.Component {
         const { user, playlists, followers, following, loggedInUserId } = this.state;
 
         if (!user) {
-            return <div>Loading...</div>;
+            return <div className="flex justify-center items-center h-screen"><div className="text-2xl">Loading...</div></div>;
         }
 
         const isOwnProfile = user._id === loggedInUserId;
 
         return (
-            <div>
-                <header className="top-0 w-full p-4 flex justify-center z-10">
-                    <h1 className="font-JunK text-8xl">JunK</h1>
+            <div className="bg-gray-100 min-h-screen flex flex-col items-center">
+                <header className="top-0 w-full p-6 flex justify-center z-10 bg-white shadow-md mb-8">
+                    <h1 className="font-JunK text-8xl text-primary">JunK</h1>
                 </header>
                 <Header />
-                <ProfileComponent 
-                    userId={user._id}
-                    username={user.username} 
-                    description={user.description} 
-                    imageUrl={user.imageUrl} 
-                    playlists={playlists} 
-                />
-                <Followers userId={user._id} />
-                <Following userId={user._id} />
-                {isOwnProfile && <EditProfile username={user.username} description={user.description} />}
-                {isOwnProfile && <CreatePlaylist />}
-                {isOwnProfile && <button onClick={this.handleDeleteAccount}>Delete account</button>}
+                <div className="container mx-auto p-6 flex flex-col items-center space-y-8">
+                    <ProfileComponent 
+                        userId={user._id}
+                        username={user.username} 
+                        description={user.description} 
+                        imageUrl={user.imageUrl} 
+                        playlists={playlists} 
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                        <Followers userId={user._id} />
+                        <br></br>
+                        <Following userId={user._id} />
+                    </div>
+                    {isOwnProfile && (
+                        <div className="w-full flex flex-col items-center space-y-6">
+                            <br></br>
+                            <EditProfile username={user.username} description={user.description} />
+                            <br></br>
+                            <CreatePlaylist />
+                            <br></br>    
+                            <button
+                                onClick={this.handleDeleteAccount}
+                                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700 transition duration-300"
+                            >
+                                Delete account
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }

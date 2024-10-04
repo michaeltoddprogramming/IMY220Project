@@ -37,16 +37,18 @@ class Following extends React.Component {
     render() {
         const { following } = this.state;
         return (
-            <div>
-                <h3>Following</h3>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-2xl font-bold mb-4 text-center">Following</h3>
                 {following.length > 0 ? (
-                    following.map((follower, index) => (
-                        <div key={index}>
-                            <ProfilePreview image={follower.imageUrl} username={follower.username} />
-                        </div>
-                    ))
+                    <div className="grid grid-cols-1 gap-4">
+                        {following.map((follower, index) => (
+                            <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                                <ProfilePreview image={follower.imageUrl} username={follower.username} />
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    <p>No following available.</p>
+                    <p className="text-center text-gray-500">No following users</p>
                 )}
             </div>
         );

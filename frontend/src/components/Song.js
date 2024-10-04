@@ -99,8 +99,7 @@ class Song extends React.Component {
         const embedUrl = `https://open.spotify.com/embed/track/${trackId}`;
 
         return (
-            <div className="border border-black p-4 rounded-lg bg-primary shadow-md text-secondary">
-                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+            <div className="p-4 rounded-lg bg-primary shadow-md text-secondary">
                 {trackId ? (
                     <iframe
                         src={embedUrl}
@@ -131,14 +130,14 @@ class Song extends React.Component {
                 >
                     Add to playlist
                 </button>
-                <button
+                                <button
                     onClick={this.handleDeleteSong}
-                    className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700"
+                    className="bg-secondary text-primary py-2 px-4 rounded mr-2 hover:bg-gray-200 transition duration-300"
                 >
                     Delete song
                 </button>
                 {selectedPlaylistName && (
-                    <p className="mt-4 italic">Selected Playlist: {selectedPlaylistName}</p>
+                    <p className="mt-4 italic">Selected Playlist - {selectedPlaylistName}</p>
                 )}
             </div>
         );

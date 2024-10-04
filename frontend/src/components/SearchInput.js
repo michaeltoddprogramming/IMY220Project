@@ -24,8 +24,8 @@ const SearchInput = ({ onSearchResults }) => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleSubmit} className="grid grid-cols-3 pl-4 gap-4">
+        <div className="p-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col">
                     <label htmlFor="search" className="text-white mb-2">Enter search term</label>
                     <input
@@ -39,15 +39,25 @@ const SearchInput = ({ onSearchResults }) => {
                 </div>
                 <div className="flex flex-col">
                     <label htmlFor="type" className="text-white mb-2">Select search type</label>
-                    <select id="type" value={type} onChange={handleTypeChange} className="p-2 rounded border border-gray-300 text-black">
+                    <select
+                        id="type"
+                        value={type}
+                        onChange={handleTypeChange}
+                        className="p-2 rounded border border-gray-300 text-black"
+                    >
                         <option value="playlists">Playlists</option>
                         <option value="songs">Songs</option>
                         <option value="users">Users</option>
                     </select>
                 </div>
-                <button type="submit" className="bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300 p-4">
-                    Search
-                </button>
+                <div className="flex items-end">
+                    <button
+                        type="submit"
+                        className="bg-secondary text-white rounded hover:bg-gray-700 transition duration-300 px-4 py-2"
+                    >
+                        Search
+                    </button>
+                </div>
             </form>
         </div>
     );

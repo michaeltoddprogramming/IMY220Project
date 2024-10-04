@@ -7,7 +7,6 @@ class PlaylistFeed extends React.Component {
 
         return (
             <div>
-                <h2>Playlist Feed</h2>
 
                 {playlists.map((playlist, index) => (
                     <div key={index}>

@@ -112,7 +112,7 @@ async function startServer() {
             const newUser = {
                 _id: newId.toString(), 
                 description: '', 
-                imageUrl: '/assets/images/placeholder.png', 
+                imageUrl: '/assets/images/.png', 
                 username, 
                 email,
                 password: hashedPassword, 

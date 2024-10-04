@@ -44,24 +44,34 @@ class EditProfile extends React.Component {
     render() {
         const { username, description } = this.state;
         return (
-            <form onSubmit={this.handleSubmit}>
-                <label htmlFor="username">Edit name here</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    value={username} 
-                    onChange={this.handleInputChange} 
-                />
-                <br/>
-                <label htmlFor="description">Edit description here</label>
-                <input 
-                    type="text" 
-                    id="description" 
-                    value={description} 
-                    onChange={this.handleInputChange} 
-                />
-                <br/>
-                <button type="submit">Submit Changes</button>
+            <form onSubmit={this.handleSubmit} className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold mb-6 text-center">Edit Profile</h2>
+                <div className="mb-4">
+                    <label htmlFor="username" className="block text-gray-700 font-bold mb-2">Edit name here</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        value={username} 
+                        onChange={this.handleInputChange} 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="description" className="block text-gray-700 font-bold mb-2">Edit description here</label>
+                    <input 
+                        type="text" 
+                        id="description" 
+                        value={description} 
+                        onChange={this.handleInputChange} 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <button 
+                    type="submit" 
+                    className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                >
+                    Submit Changes
+                </button>
             </form>
         );
     }

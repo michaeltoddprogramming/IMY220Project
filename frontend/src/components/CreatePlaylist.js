@@ -1,5 +1,5 @@
 import React from "react";
-import { getCookie, deleteCookie } from '../utils/cookie';
+import { getCookie } from '../utils/cookie';
 
 class CreatePlaylist extends React.Component {
     constructor(props) {
@@ -41,28 +41,38 @@ class CreatePlaylist extends React.Component {
 
     render() {
         return (
-            <form onSubmit={this.handleSubmit}>
-                <label htmlFor="name">Insert playlist name</label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Playlist name here..."
-                    value={this.state.name}
-                    onChange={this.handleChange}
-                />
-                <br/>
-                <label htmlFor="description">Insert description</label>
-                <input
-                    type="text"
-                    id="description"
-                    name="description"
-                    placeholder="Playlist description here..."
-                    value={this.state.description}
-                    onChange={this.handleChange}
-                />
-                <br/>
-                <button type="submit">Create Playlist</button>
+            <form onSubmit={this.handleSubmit} className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold mb-6 text-center">Create Playlist</h2>
+                <div className="mb-4">
+                    <label htmlFor="name" className="block text-gray-700 font-bold mb-2">Insert playlist name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Playlist name here..."
+                        value={this.state.name}
+                        onChange={this.handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="description" className="block text-gray-700 font-bold mb-2">Insert description</label>
+                    <input
+                        type="text"
+                        id="description"
+                        name="description"
+                        placeholder="Playlist description here..."
+                        value={this.state.description}
+                        onChange={this.handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                >
+                    Create Playlist
+                </button>
             </form>
         );
     }

@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { setCookie, getCookie, deleteCookie } from '../utils/cookie';
 
-
 class Header extends React.Component {
     handleLogout = async () => {
         try {
@@ -22,8 +21,8 @@ class Header extends React.Component {
     render() {
         const userID = getCookie('userId');
         return (
-            <nav className="flex flex-col items-center space-y-4 p-4 text-3xl h-full">
-                <div className="flex flex-col items-center space-y-4 mt-20">
+            <nav className="flex items-center w-full p-4 text-3xl bg-white shadow-md">
+                <div className="flex space-x-4 flex-grow">
                     <Link to="/home" className="p-2 hover:bg-primary rounded">
                         Home
                     </Link>
@@ -31,7 +30,7 @@ class Header extends React.Component {
                         Profile
                     </Link>
                 </div>
-                <div className="mt-auto mb-4">
+                <div>
                     <button onClick={this.handleLogout} className="p-2 hover:bg-primary rounded">
                         Logout
                     </button>

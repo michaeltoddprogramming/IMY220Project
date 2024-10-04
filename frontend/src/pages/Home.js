@@ -94,12 +94,12 @@ class Home extends React.Component {
         const { searchResults } = this.state;
         return (
             <div className="flex flex-col min-h-screen">
+                <Header />
                 <header className="top-0 w-full p-4 flex justify-center z-10">
                     <h1 className="font-JunK text-8xl">JunK</h1>
                 </header>
                 <div className="flex flex-1 pt-32">
                     <div className="w-36 h-full flex flex-col p-4">
-                        <Header />
                     </div>
                     <div className="flex-1">
                         <div className="p-4">
