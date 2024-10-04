@@ -1,32 +1,72 @@
-import React, { useState } from 'react';
+import React from "react";
+import { getCookie } from '../utils/cookie';
 
-const EditPlaylist = ({ playlist, onEditComplete }) => {
-  const [title, setName] = useState(playlist.title);
-  const [description, setDescription] = useState(playlist.description);
-  const [imageURL, setCoverImage] = useState(playlist.imageURL);
+class EditPlaylist extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            name: props.name,
+            description: props.description
+        };
+    }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onEditComplete();
-  };
+    handleInputChange = (event) => {
+        const { id, value } = event.target;
+        this.setState({ [id]: value });
+    }
 
-  return (
-    <form onSubmit={handleSubmit} className="edit-form">
-      <label>
-        Title:
-        <input type="text" value={title} onChange={(e) => setName(e.target.value)} />
-      </label>
-      <label>
-        Description:
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-      </label>
-      <label>
-        Cover Image:
-        <input type="text" value={imageURL} onChange={(e) => setCoverImage(e.target.value)} />
-      </label>
-      <button type="submit">Save</button>
-    </form>
-  );
-};
+    handleSubmit = (event) => {
+        event.preventDefault();
+        const { name, description } = this.state;
+        const userID = getCookie('userId');
+        const { playlistID } = this.props;
+
+        fetch(`/api/playlist/${playlistID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'user-id': userID // Send user ID in headers
+            },
+            body: JSON.stringify({ name, description })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Playlist updated successfully:', data);
+        })
+        .catch(error => {
+            console.error('Error updating playlist:', error);
+        });
+    }
+
+    render() {
+        const { name, description } = this.state;
+        return (
+            <form onSubmit={this.handleSubmit}>
+                <label htmlFor="name">Edit playlist name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    value={name} 
+                    onChange={this.handleInputChange} 
+                />
+                <br/>
+                <label htmlFor="description">Edit description</label>
+                <input 
+                    type="text" 
+                    id="description" 
+                    value={description} 
+                    onChange={this.handleInputChange} 
+                />
+                <br/>
+                <button type="submit">Edit Playlist</button>
+            </form>
+        );
+    }
+}
 
 export default EditPlaylist;

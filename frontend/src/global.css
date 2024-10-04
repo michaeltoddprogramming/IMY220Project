@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'JunKFont';
+    src: url(./style/fonts/PasseroOne-Regular.ttf);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #006666;
+    color: #008584;
+    font-family: 'JunKFont';
+}

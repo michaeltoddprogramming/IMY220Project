@@ -1,95 +1,116 @@
 import React from 'react';
-import Navigation from "../components/Navigation";
-import Feed from '../components/Feed';
-import Playlists from '../components/Playlists';
-import Search from '../components/Search';
+import Header from "../components/Header.js";
+import SongFeed from '../components/SongFeed.js';
+import PlaylistFeed from '../components/PlaylistFeed.js';
+import SearchInput from '../components/SearchInput.js';
+import CreateSong from '../components/CreateSong.js';
+import { getCookie } from '../utils/cookie';
+import Song from '../components/Song';
+import PlaylistPreview from '../components/PlaylistPreview';
+import ProfilePreview from '../components/ProfilePreview';
 
 class Home extends React.Component {
-  render() {
-      const songsOnFeed = [
-        {
-          title: "Shape of You",
-          artist: "Ed Sheeran",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Blinding Lights",
-          artist: "The Weeknd",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Levitating",
-          artist: "Dua Lipa",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Watermelon Sugar",
-          artist: "Harry Styles",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Circles",
-          artist: "Post Malone",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Don't Start Now",
-          artist: "Dua Lipa",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Bad Guy",
-          artist: "Billie Eilish",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Old Town Road",
-          artist: "Lil Nas X",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Sunflower",
-          artist: "Post Malone, Swae Lee",
-          link: "www.examplelink.com",
-          imageUrl: "/assets/images/placeholder.png"
-        }
-      ];
-      const usersPlaylists = [
-        {
-          title: "Chill Vibes",
-          description: "A collection of relaxing tunes",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Workout Hits",
-          description: "Energetic songs to pump you up",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-        {
-          title: "Road Trip Anthems",
-          description: "Perfect songs for a long drive",
-          imageUrl: "/assets/images/placeholder.png"
-        },
-      ]
+    state = {
+        songs: [],
+        playlists: [],
+        searchResults: null,
+        searchType: null
+    };
 
-    return (
-      <div>
-        <h1>Home</h1>
-        <Navigation />
-        <Search />
-        <Feed songs={ songsOnFeed } />
-        <Playlists playlists={ usersPlaylists } />
-      </div>
-    );
-  }
+    componentDidMount() {
+        this.fetchSongs();
+        this.fetchPlaylists();
+    }
+
+    fetchSongs = () => {
+        fetch('/api/songs')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.setState({ songs: data });
+            })
+            .catch(error => {
+                console.error('Error fetching songs:', error);
+            });
+    }
+
+    fetchPlaylists = () => {
+        const userId = getCookie('userId');
+
+        fetch(`/api/user/${userId}/following/playlists`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.setState({ playlists: data });
+            })
+            .catch(error => {
+                console.error('Error fetching playlists:', error);
+            });
+    }
+
+    handleSearchResults = (results, type) => {
+        this.setState({ searchResults: results, searchType: type });
+    }
+
+    renderSearchResults = () => {
+        const { searchResults, searchType } = this.state;
+        if (!searchResults) return null;
+
+        return (
+            <div>
+                <h2>Search Results</h2>
+                <ul>
+                    {searchResults.map((result, index) => (
+                        <li key={index}>
+                            {searchType === 'songs' && <Song title={result.title} link={result.link} />}
+                            {searchType === 'playlists' && <PlaylistPreview id={result.playlistID} name={result.name} imageUrl={result.imageUrl} description={result.description} />}
+                            {searchType === 'users' && <ProfilePreview image={result.imageUrl} username={result.username} />}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+
+    renderDefaultContent = () => {
+        return (
+            <div className="flex-1 p-4">
+                <SongFeed songs={this.state.songs} />
+                <PlaylistFeed playlists={this.state.playlists} />
+                <CreateSong />
+            </div>
+        );
+    }
+    
+    render() {
+        const { searchResults } = this.state;
+        return (
+            <div className="flex flex-col min-h-screen">
+                <Header />
+                <header className="top-0 w-full p-4 flex justify-center z-10">
+                    <h1 className="font-JunK text-8xl">JunK</h1>
+                </header>
+                <div className="flex flex-1 pt-32">
+                    <div className="w-36 h-full flex flex-col p-4">
+                    </div>
+                    <div className="flex-1">
+                        <div className="p-4">
+                            <SearchInput onSearchResults={this.handleSearchResults} />
+                            {searchResults ? this.renderSearchResults() : this.renderDefaultContent()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 }
 
 export default Home;

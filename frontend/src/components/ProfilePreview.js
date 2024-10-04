@@ -1,19 +1,15 @@
 import React from "react";
-import { Link } from "react-router-dom";
 
-class previewProfile extends React.Component{
-  render(){
-    const { username, profilePicture, bio, numFollowers} = this.props;
-    return (
-      <div className="profile-preview">
-        <img src={profilePicture} alt={`${username}'s profile`} className="profile-picture" />
-        <h3>{username}</h3>
-        <p>{bio}</p>
-        <p>{numFollowers} followers</p>
-        <Link to="/profile/:userId">Visit Profile</Link>
-      </div>
-    );
-  }
-}
+class ProfilePreview extends React.Component {
+    render() {
+        const { image, username } = this.props;
+        return (
+            <div>
+                <img src={ image } alt="Placeholder" style={{ width: '50px' }} />
+                <span>{ username }</span>
+            </div>
+        );
+    }
+};
 
-export default previewProfile ;
+export default ProfilePreview;

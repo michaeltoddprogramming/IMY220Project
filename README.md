@@ -10,3 +10,10 @@
 **Colour Paletes**
 
     https://www.colourlovers.com/palette/785323/Beautiful_Freak
+
+**Docker**
+
+    docker build -t junk .
+    docker run --name junk -p 3000:3000 junk
+    docker stop junk
+    docker rm junk
